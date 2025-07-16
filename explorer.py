@@ -961,14 +961,14 @@ def show_tx_info(txid, more_details=False):
 
     kindex_info = {} # { amount => { keyindex => {output-info} } }
     block_info_req = None
-    if 'vin' in tx['info']:
-        if len(tx['info']['vin']) == 1 and 'gen' in tx['info']['vin'][0]:
+    if 'vin' in tx:
+        if len(tx['vin']) == 1 and 'gen' in tx['vin'][0]:
             tx['coinbase'] = True
-        elif tx['info']['vin'] and config.enable_mixins_details:
+        elif tx['vin'] and config.enable_mixins_details:
             tx['coinbase'] = False
             # Load output details for all outputs contained in the inputs
             outs_req = []
-            for inp in tx['info']['vin']:
+            for inp in tx['vin']:
                 # Key positions are stored as offsets from the previous index rather than indices,
                 # so de-delta them back into indices:
                 if 'key_offsets' in inp['key'] and 'key_indices' not in inp['key']:
@@ -980,7 +980,7 @@ def show_tx_info(txid, more_details=False):
                         kis.append(kbase)
                     del inp['key']['key_offsets']
 
-            outs_req = [{"amount":inp['key']['amount'], "index":ki} for inp in tx['info']['vin'] for ki in inp['key']['key_indices']]
+            outs_req = [{"amount":inp['key']['amount'], "index":ki} for inp in tx['vin'] for ki in inp['key']['key_indices']]
             outputs = FutureJSON(lmq, beldexd, 'rpc.get_outs', args={
                 'get_txid': True,
                 'outputs': outs_req,
@@ -992,7 +992,7 @@ def show_tx_info(txid, more_details=False):
                     'heights': [o["height"] for o in outputs]
                 })
                 i = 0
-                for inp in tx['info']['vin']:
+                for inp in tx['vin']:
                     amount = inp['key']['amount']
                     if amount not in kindex_info:
                         kindex_info[amount] = {}
