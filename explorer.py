@@ -298,6 +298,7 @@ def main(refresh=None, page=0, per_page=None, first=None, last=None):
     stake = FutureJSON(lmq, beldexd, 'rpc.get_staking_requirement', 10)
     base_fee = FutureJSON(lmq, beldexd, 'rpc.get_fee_estimate', 10)
     hfinfo = FutureJSON(lmq, beldexd, 'rpc.hard_fork_info', 10)
+    accrued = FutureJSON(omq, oxend, 'rpc.get_accrued_batched_earnings', 1)
     mempool = get_mempool_future(lmq, beldexd)
     mns = get_mns_future(lmq, beldexd)
     checkpoints = FutureJSON(lmq, beldexd, 'rpc.get_checkpoints', args={"count": 3})
