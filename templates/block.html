@@ -50,7 +50,7 @@ Validator bits: {{"{:011b}".format(block.info.POS.validator_bitset)}}"><label>Bl
         {%endif%}
 
         {%set sum_burned = transactions | selectattr('extra.burn_amount') | sum(attribute='extra.burn_amount') %}
-        {%set sum_fees = transactions | selectattr('info.rct_signatures') | selectattr('info.rct_signatures.txnFee') | sum(attribute='info.rct_signatures.txnFee') - sum_burned%}
+        {%set sum_fees = transactions | selectattr('rct_signatures') | selectattr('rct_signatures.txnFee') | sum(attribute='rct_signatures.txnFee') - sum_burned%}
 
         <span title="{{(block_header.reward - sum_fees) | beldex(fixed=True)}} created in this block.{%if sum_fees > 0%}
 
