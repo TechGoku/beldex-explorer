@@ -955,7 +955,7 @@ def show_tx_info(txid, more_details=False):
 
     # If this is a state change, see if we have the quorum stored to provide context
     testing_quorum = None
-    if tx['info']['version'] >= 4 and 'mn_state_change' in tx['extra']:
+    if tx['version'] >= 4 and 'mn_state_change' in tx['extra']:
         testing_quorum = FutureJSON(lmq, beldexd, 'rpc.get_quorum_state', 60, cache_key='tx_state_change',
                 args={ 'quorum_type': 0, 'start_height': tx['extra']['mn_state_change']['height'] })
 
