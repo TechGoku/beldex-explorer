@@ -202,7 +202,7 @@ def get_mns(mns_future, info_future):
     mn_states = mns_future.get()
     mn_states = mn_states['master_node_states'] if 'master_node_states' in mn_states else []
     for mn in mn_states:
-        mn['contribution_open'] = mn['staking_requirement'] - mn.get(['total_reserved'],mn['total_contributed'])
+        mn['contribution_open'] = mn['staking_requirement'] - mn.get('total_reserved',mn['total_contributed'])
         mn['contribution_required'] = mn['staking_requirement'] - mn['total_contributed']
         mn['num_contributions'] = sum(len(x['locked_contributions']) for x in mn['contributors'] if 'locked_contributions' in x)
 
@@ -577,7 +577,7 @@ def show_mn(pubkey):
     # Number of unfilled, reserved contribution spots:
     mn['num_reserved_spots'] = sum('reserved' in x and x["amount"] < x["reserved"] for x in mn["contributors"])
     # Available open contribution spots:
-    mn['num_open_spots'] = 0 if mn['total_reserved'] >= mn['staking_requirement'] else max(0, 4 - mn['num_contributions'] - mn['num_reserved_spots'])
+    mn['num_open_spots'] = 0 if mn.get('total_reserved', 0) >= mn.get('staking_requirement', 0) else max(0,4 - mn.get('num_contributions', 0) - mn.get('num_reserved_spots', 0))
 
     if more_details:
 
@@ -634,11 +634,11 @@ def parse_txs(txs_rpc):
         if 'type' not in tx and 'as_json' in tx:
             # We have serialized JSON data inside a field in the JSON, because of beldexd's
             # multiple incompatible JSON generators 🤮:
-            info = json.loads(tx["as_json"])
+            tx = json.loads(tx["as_json"])
             del tx['as_json']
             # The "extra" field inside as_json is retardedly in per-byte integer values,
             # convert it to a hex string 🤮:
-            info['tx_extra_raw'] = bytes_to_hex(info['extra'])
+            tx['tx_extra_raw'] = bytes_to_hex(info['extra'])
             del info['extra']
             tx.update(info)
     return txs_rpc['txs']
@@ -740,7 +740,7 @@ def show_tx(txid, more_details=False):
 
     # If this is a state change, see if we have the quorum stored to provide context
     testing_quorum = None
-    if tx['version'] >= 4 and 'sn_state_change' in tx['extra']:
+    if tx['version'] >= 4 and 'mn_state_change' in tx['extra']:
         testing_quorum = FutureJSON(lmq, beldexd, 'rpc.get_quorum_state', 60, cache_key='tx_state_change',
                 args={ 'quorum_type': 0, 'start_height': tx['extra']['mn_state_change']['height'] })
 
