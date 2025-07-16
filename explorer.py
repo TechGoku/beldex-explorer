@@ -298,7 +298,6 @@ def main(refresh=None, page=0, per_page=None, first=None, last=None):
     stake = FutureJSON(lmq, beldexd, 'rpc.get_staking_requirement', 10)
     base_fee = FutureJSON(lmq, beldexd, 'rpc.get_fee_estimate', 10)
     hfinfo = FutureJSON(lmq, beldexd, 'rpc.hard_fork_info', 10)
-    accrued = FutureJSON(lmq, beldexd, 'rpc.get_accrued_batched_earnings', 1)
     mempool = get_mempool_future(lmq, beldexd)
     mns = get_mns_future(lmq, beldexd)
     checkpoints = FutureJSON(lmq, beldexd, 'rpc.get_checkpoints', args={"count": 3})
@@ -375,20 +374,13 @@ def main(refresh=None, page=0, per_page=None, first=None, last=None):
 
     # Clean up the MN data a bit to make things easier for the templates
     awaiting_mns, active_mns, inactive_mns = get_mns(mns, inforeq)
-    accrued = accrued.get()
 
-    accrued_total = (
-
-            sum(amt for wallet, amt in accrued['balances'].items()) if 'balances' in accrued else
-
-            sum(accrued['amounts']))
     return flask.render_template('index.html',
             bns=bns,
             info=info,
             stake=stake.get(),
             fees=base_fee.get(),
             emission=coinbase.get(),
-            accrued_total=accrued_total,
             hf=hfinfo.get(),
             active_mns=active_mns,
             inactive_mns=inactive_mns,
