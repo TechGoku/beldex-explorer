@@ -580,7 +580,7 @@ def show_mn(pubkey):
 
                 'details_css': formatter.get_style_defs('.syntax-highlight'),
 
-                'details_html': highlight(json.dumps(sn, indent="\t", sort_keys=True), JsonLexer(), formatter),
+                'details_html': highlight(json.dumps(mn, indent="\t", sort_keys=True), JsonLexer(), formatter),
 
                 }
 
