@@ -647,7 +647,8 @@ def get_block_txs_future(lmq, beldexd, block):
     if 'info' not in block:
         try:
             block['info'] = json.loads(block["json"])
-            del block['info']['miner_tx']  # Doemn't include enough for us, we fetch it separately with extra interpretation instead
+            if 'miner_tx' in block['info']:
+                del block['info']['miner_tx']  # Doemn't include enough for us, we fetch it separately with extra interpretation instead
             del block["json"]
         except Exception as e:
             print("Something getting wrong: cannot parse block json for block {}: {}".format(block_height, e), file=sys.stderr)
