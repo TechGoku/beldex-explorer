@@ -78,7 +78,7 @@
           </span>
         {%endif%}
     </h4>
-    <div class="info-item"><label>Extra: </label>{{tx.extra}}</div>
+    <div class="info-item"><label>Extra: </label>{{tx.tx_extra_raw}}</div>
 
     {% if tx.version >= 4 -%}
         {% if tx.type == 1 and 'mn_state_change' in tx.extra %}
