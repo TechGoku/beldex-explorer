@@ -548,7 +548,7 @@ def show_bns(name, more_details=False):
 
 @app.route('/master_node/<hex64:pubkey>')  # For backwards compatibility with old explorer URLs
 @app.route('/mn/<hex64:pubkey>')
-def show_mn(pubkey):
+def show_mn(pubkey,more_details=False):
     lmq, beldexd = lmq_connection()
     info = FutureJSON(lmq, beldexd, 'rpc.get_info', 1)
     hfinfo = FutureJSON(lmq, beldexd, 'rpc.hard_fork_info', 10)
