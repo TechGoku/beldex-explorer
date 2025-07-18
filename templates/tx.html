@@ -187,6 +187,7 @@ This tx does not includes a vote from this testing master node (only 7 votes are
             <p><label>Expiration:</label> {{tx.extra.mn_registration.expiry | from_timestamp | format_datetime}} ({{tx.extra.mn_registration.expiry}}),
             or {{(tx.extra.mn_registration.expiry|from_timestamp - server.datetime) | reltime}}</p>
 
+            {% if 'mn_registration' in tx.extra %}
             <h2>Master Node Registration Address(es)</h2>
             <div class="TitleDivider"></div>
             <table class="Table">
@@ -196,14 +197,24 @@ This tx does not includes a vote from this testing master node (only 7 votes are
                         <td>Portions</td>
                     </tr>
                 </thead>
-
                 <tbody>
-                    {%for c in tx.extra.mn_registration.contributors%}
-                        <tr>
-                            <td>{{c.wallet}}</td>
-                            <td>{{(c.portion / 10000) | chop0}}%</td>
-                        </tr>
-                    {%endfor%}
+                    {% if 'contributors' in tx.extra.mn_registration %}
+                        {# Old format: list of contributors with portion field #}
+                        {% for c in tx.extra.mn_registration.contributors %}
+                            <tr>
+                                <td>{{ c.wallet }}</td>
+                                <td>{{ (c.portion / 10000) | chop0 }}%</td>
+                            </tr>
+                        {% endfor %}
+                    {% elif 'reservations' in tx.extra.mn_registration %}
+                        {# New format: dict of wallet → amount #}
+                        {% for wallet, amount in tx.extra.mn_registration.reservations.items() %}
+                            <tr>
+                                <td>{{ wallet }}</td>
+                                <td>{{ (amount / 10000) | chop0 }}%</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         {% elif 'mn_contributor' in tx.extra %}
