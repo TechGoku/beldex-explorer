@@ -35,7 +35,7 @@
                         N/A
                     {%endif%}
                 </td>
-                <td>{{tx.vin | length}}/{{tx.info.vout | length}}</td>
+                <td>{{tx.vin | length}}/{{tx.vout | length}}</td>
                 <td>{{tx.size | si}}B</td>
             </tr>
         {% endfor %}
