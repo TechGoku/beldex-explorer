@@ -571,8 +571,8 @@ def show_mn(pubkey):
     # Number of unfilled, reserved contribution spots:
     mn['num_reserved_spots'] = sum('reserved' in x and x["amount"] < x["reserved"] for x in mn["contributors"])
     # Available open contribution spots:
-    mn['num_open_spots'] = 0 if mn.get('total_reserved', 0) >= mn.get('staking_requirement', 0) else max(0,4 - mn.get('num_contributions', 0) - mn.get('num_reserved_spots', 0))
-
+    # mn['num_open_spots'] = 0 if mn.get('total_reserved', 0) >= mn.get('staking_requirement', 0) else max(0,4 - mn.get('num_contributions', 0) - mn.get('num_reserved_spots', 0))
+    mn['num_open_spots'] = 0 if mn.get('total_reserved', mn['total_contributed']) >= mn['staking_requirement'] else max(0, 4 - mn['num_contributions'] - mn['num_reserved_spots'])
     if more_details:
 
         formatter = HtmlFormatter(cssclass="syntax-highlight", style="paraiso-dark")
