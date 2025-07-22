@@ -228,8 +228,8 @@
                   <td><a href="/tx/{{tx.tx_hash}}">{{tx.tx_hash}}</a></td>
                   <td>{{fee.display(tx)}}</td>
                   <td></td>
-        <td>{% if tx.info is defined and tx.info.vin is defined and tx.info.vout is defined %}
-            {{tx.info.vin | length}}/{{tx.info.vout | length}}
+        <td>{% if tx is defined and tx.vin is defined and tx.vout is defined %}
+            {{tx.vin | length}}/{{tx.vout | length}}
           {% else %}
             -
           {% endif %}
