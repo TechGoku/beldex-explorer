@@ -120,12 +120,7 @@ Note that this value does not include earned transaction fees ({{sum_fees | beld
                   <td><a href="/tx/{{tx.tx_hash}}">{{tx.tx_hash}}</a></td>
                   <td>{{fee.display(tx)}}</td>
                   <td></td>
-                  <td>{% if 'info' in tx and 'vin' in tx and 'vout' in tx %}
-                                {{tx.vin | length}}/{{tx.vout | length}}
-                            {% else %}
-                                N/A
-                            {% endif %}
-                        </td>
+                  <td>{{tx.vin | length}}/{{tx.vout | length}}</td>
                   <td>{{tx.size | si}}B</td>
                 </tr>
             {% endfor %}
