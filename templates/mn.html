@@ -60,7 +60,7 @@
     </span>
 
     {% if mn.total_reserved is defined and mn.total_reserved != mn.total_contributed %}
-      <span><label>Total reserved:</label> {{ mn.total_reserved | beldex }}</span>
+      <span><label>Total reserved:</label> {{ mn.total_reserved -mn.total_contributed| beldex }}</span>
     {% endif %}
 
     <span>
@@ -168,6 +168,7 @@
     <p class="mn-awaiting">Awaiting registration.  This master node has <span class="beldex required">{{(mn.staking_requirement - mn.total_contributed) | beldex}}</span>
     remaining to be contributed.
     {%if mn.num_open_spots > 0%}
+      {%set total_staked = mn.total_reserved if 'total_reserved' in mn else mn.total_contributed%}
       The minimum required stake contribution is <span class="beldex required">{{((mn.staking_requirement - mn.total_reserved | default(0)) / mn.num_open_spots) | beldex}}</span>.
     {%endif%}
     </p>
@@ -204,7 +205,7 @@
                 ({{c.locked_contributions|length}} contributions)
               {%endif-%}
             </td>
-            <td>{{c.reserved | default(0) | beldex}}</td>
+            <td>{{(c.reserved if 'reserved' in c else c.amount)| default(0) | beldex}}</td>
           </tr>
         {%endfor%}
       </tbody>
