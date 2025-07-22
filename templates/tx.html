@@ -180,7 +180,15 @@ This tx does not includes a vote from this testing master node (only 7 votes are
             <div class="TitleDivider"></div>
             <p><label>Master Node Public Key:</label> <a href="/mn/{{tx.extra.mn_pubkey}}">{{tx.extra.mn_pubkey}}</a></p>
             <p><label>Operator fee:</label>
-            {%if tx.extra.mn_registration.contributors[0].portion == 1000000%}N/A (solo registration)
+            {% if tx.extra.mn_registration is defined and tx.extra.mn_registration.contributors is defined and tx.extra.mn_registration.contributors %}
+              {% if tx.extra.mn_registration.contributors[0].portion == 1000000 %}
+                N/A (solo registration)
+              {% else %}
+                {{ tx.extra.mn_registration.contributors[0].portion / 10000.0 }}%
+              {% endif %}
+            {% else %}
+              Unknown (missing contributor info)
+            {% endif %}
             {%else%}{{(tx.extra.mn_registration.fee / 10000) | chop0}}%
             {%endif%}</p>
             <p><label>Contribution Amount:</label> {%if 'stake_amount' in tx%}{{tx.stake_amount | beldex}}{%else%}???{%endif%}</p>
