@@ -90,21 +90,9 @@ Note that this value does not include earned transaction fees ({{sum_fees | beld
         </tr>
         <tr>
             <td><a href="/tx/{{miner_tx.tx_hash}}">{{miner_tx.tx_hash}}</a></td>
-            <td>
-                {% if 'info' in miner_tx and 'vout' in miner_tx.info %}
-                    {{ miner_tx.vout | sum(attribute='amount') | beldex }}
-                {% else %}
-                    N/A
-                {% endif %}
-            </td>
+            <td>{{miner_tx.vout | sum(attribute='amount') | beldex}}</td>
             <td>{{miner_tx.size}}</td>
-            <td>
-                {% if 'info' in miner_tx and 'version' in miner_tx.info %}
-                    {{ miner_tx.version }}
-                {% else %}
-                    N/A
-                {% endif %}
-            </td>
+            <td>{{miner_tx.version}}</td>
         </tr>
     </table>
 
