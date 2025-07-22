@@ -167,7 +167,7 @@
 
         {% set block_weights = blocks | map(attribute='block_weight') | sort %}
         {%if block_weights|count > 0%}
-          <h4 class="Subtitle">(Min. / Median / Average / Max. size of these blocks:
+          <h4 class="Subtitle">(Min. / Median / Average / Max. weights of these blocks:
             {{block_weights[0] | si}}B /
             {{(block_weights[(block_weights|count-1)//2]/2 + block_weights[(block_weights|count)//2]/2) | si}}B /
             {{(block_weights|sum / block_weights|count) | si}}B /

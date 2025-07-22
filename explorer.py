@@ -697,8 +697,7 @@ def show_block(height=None, hash=None, more_details=False):
         more_details = {}
 
     transactions = [] if txs is None else parse_txs(txs.get()).copy()
-    miner_tx = transactions.pop() if transactions else []
-
+    miner_tx = transactions.pop() if block['block_header'].get('miner_tx_hash') else None  
     return flask.render_template("block.html",
             info=info.get(),
             hfinfo=hfinfo.get(),
