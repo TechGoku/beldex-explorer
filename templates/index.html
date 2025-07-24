@@ -205,7 +205,7 @@
                 <td>{% if b.txs and b.txs[0] is defined %}{{fee.display(b.txs[0])}}{% else %}-{% endif %}</td>
                 <td>{{b.reward | beldex(tag=False, fixed=True, decimals=2)}}</td>
                 <td>
-                      {% if b.txs and b.txs[0].info is defined and b.txs[0].vout is defined %}
+                    {% if b.txs and b.txs[0].vout is defined %}
                         0/{{b.txs[0].vout | length}}
                       {% else %}
                         0/0
