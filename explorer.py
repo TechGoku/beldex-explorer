@@ -370,7 +370,7 @@ def main(refresh=None, page=0, per_page=None, first=None, last=None):
                     if i >= len(blocks):
                         print("Something getting wrong: have leftover txes")
                         break
-            blocks[i]['txs'].append(tx)
+                blocks[i]['txs'].append(tx)
 
     # Clean up the MN data a bit to make things easier for the templates
     awaiting_mns, active_mns, inactive_mns = get_mns(mns, inforeq)
