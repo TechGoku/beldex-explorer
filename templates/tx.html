@@ -14,7 +14,7 @@
         <H4 style="margin:5px"><label>TX Prefix Hash:</label> {{tx.tx_prefix_hash}}</H4>
     {%endif%}
     #}
-    <h4 style="margin:5px"><label>TX Public Key:</label> <span id="tx_pub_key">{{tx.extra.pubkey[1]}}</span></H4>
+    <h4 style="margin:5px"><label>TX Public Key:</label> <span id="tx_pub_key">{{tx.extra.pubkey}}</span></H4>
     <span id="add_tx_pub_keys" style="display: none;">
         {%-for pk in tx.extra.additional_pubkeys%}
             {%-if not loop.first%}; {%endif-%}
