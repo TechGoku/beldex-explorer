@@ -202,7 +202,10 @@ def get_mns(mns_future, info_future):
     mn_states = mns_future.get()
     mn_states = mn_states['master_node_states'] if 'master_node_states' in mn_states else []
     for mn in mn_states:
-        mn['contribution_open'] = mn['staking_requirement'] - mn.get('total_reserved',mn['total_contributed'])
+        mn['staking_requirement'] = int(mn['staking_requirement'])
+        mn['total_reserved'] = int(mn.get('total_reserved', 0))
+        mn['total_contributed'] = int(mn.get('total_contributed', 0))
+        mn['contribution_open'] = mn['staking_requirement'] - mn['total_reserved']
         mn['contribution_required'] = mn['staking_requirement'] - mn['total_contributed']
         mn['num_contributions'] = sum(len(x['locked_contributions']) for x in mn['contributors'] if 'locked_contributions' in x)
 
@@ -546,9 +549,10 @@ def show_bns(name, more_details=False):
             **more_details,
             )
 
-@app.route('/master_node/<hex64:pubkey>')  # For backwards compatibility with old explorer URLs
+@app.route('/master_node/<hex64:pubkey>')
 @app.route('/mn/<hex64:pubkey>')
-def show_mn(pubkey,more_details=False):
+@app.route('/mn/<hex64:pubkey>/<int:more_details>')
+def show_mn(pubkey, more_details=False):
     lmq, beldexd = lmq_connection()
     info = FutureJSON(lmq, beldexd, 'rpc.get_info', 1)
     hfinfo = FutureJSON(lmq, beldexd, 'rpc.hard_fork_info', 10)
@@ -564,14 +568,12 @@ def show_mn(pubkey,more_details=False):
                 )
 
     mn = mn['master_node_states'][0]
-    # These are a bit non-trivial to properly calculate:
 
     # Number of staked contributions
     mn['num_contributions'] = sum(len(x["locked_contributions"]) for x in mn["contributors"] if "locked_contributions" in x)
-    # Number of unfilled, reserved contribution spots:
+    # Number of unfilled, reserved contribution spots
     mn['num_reserved_spots'] = sum('reserved' in x and x["amount"] < x["reserved"] for x in mn["contributors"])
-    # Available open contribution spots:
-    # mn['num_open_spots'] = 0 if mn.get('total_reserved', 0) >= mn.get('staking_requirement', 0) else max(0,4 - mn.get('num_contributions', 0) - mn.get('num_reserved_spots', 0))
+    # Available open contribution spots
     mn['num_open_spots'] = 0 if mn.get('total_reserved', mn['total_contributed']) >= mn['staking_requirement'] else max(0, 4 - mn['num_contributions'] - mn['num_reserved_spots'])
     if more_details:
 
@@ -580,9 +582,7 @@ def show_mn(pubkey,more_details=False):
         more_details = {
 
                 'details_css': formatter.get_style_defs('.syntax-highlight'),
-
                 'details_html': highlight(json.dumps(mn, indent="\t", sort_keys=True), JsonLexer(), formatter),
-
                 }
 
     else:

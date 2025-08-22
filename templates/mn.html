@@ -60,7 +60,7 @@
     </span>
 
     {% if mn.total_reserved is defined and mn.total_reserved != mn.total_contributed %}
-      <span><label>Total reserved:</label> {{ mn.total_reserved -mn.total_contributed| beldex }}</span>
+      <span><label>Total reserved:</label> {{ (mn.total_reserved - mn.total_contributed) | beldex }}</span>
     {% endif %}
 
     <span>
@@ -230,6 +230,18 @@
           </tr>
         {%endfor%}
       </table>
+    {%endif%}
+
+    {%if details_html%}
+      <style type="text/css">
+        {{details_css | safe}}
+      </style>
+      <div class="TitleDivider" id="more_details"></div>
+        {{details_html | safe}}
+      {%else%}
+      <h5>
+        <a href="/mn/{{mn.master_node_pubkey}}/1#more_details">Show raw details</a>
+      </h5>
     {%endif%}
 </div>
 {%endblock%}
