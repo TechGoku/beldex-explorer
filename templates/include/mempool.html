@@ -25,7 +25,9 @@
         {% import 'include/tx_fee.html' as fee %}
         {% for tx in mempool.txs[:mempool_limit] %}
             <tr>
-                <td title="{{tx.received_timestamp | from_timestamp | format_datetime}}">{{tx.receive_time | from_timestamp | ago}}</td>
+<td title="{{ (tx.receive_time if tx.receive_time is defined else tx.received_timestamp) | from_timestamp | format_datetime }}">
+    {{ (tx.receive_time if tx.receive_time is defined else tx.received_timestamp) | from_timestamp | ago }}
+</td>
                 <td>{{symbol.display(tx)}}</td>
                 <td><a href="/tx/{{tx.tx_hash}}">{{tx.tx_hash}}</a></td>
                 <td>
