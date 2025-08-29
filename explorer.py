@@ -472,82 +472,109 @@ def block_with_txs_req(lmq, beldexd, hash_or_height, **kwargs):
     return FutureJSON(lmq, beldexd, 'rpc.get_block', cache_key='single', args=args, **kwargs)
 
 
-def bns_decrypt(lmq, beldexd, name, type, encrypted_value, **kwargs):
+def bns_decrypt(lmq, beldexd, name, bns_type, encrypted_value, **kwargs):
     return FutureJSON(lmq, beldexd, 'rpc.bns_value_decrypt', args={
-        "name" : name ,"type" : type ,"encrypted_value" : encrypted_value})
+        "name": name,
+        "type": bns_type,
+        "encrypted_value": encrypted_value,
+    })
 
+
+# def bns_info(lmq, beldexd, name, **kwargs):
+#     name_hash = nacl.hash.blake2b(name.encode(), encoder=nacl.encoding.Base64Encoder)
+#     return FutureJSON(lmq, beldexd, 'rpc.bns_names_to_owners', args={
+#         "name_hash": name_hash.decode('ascii')
+#     })
 def bns_info(lmq, beldexd, name, **kwargs):
-    name_hash = nacl.hash.blake2b(name.encode(), encoder = nacl.encoding.Base64Encoder)
-    return FutureJSON(lmq, beldexd, 'rpc.bns_names_to_owners', args={
-        "entries" : [name_hash.decode('ascii')]})
-
+    # Generate the hash using blake2b
+    name_hash = nacl.hash.blake2b(name.encode(), encoder=nacl.encoding.RawEncoder)
+    # Convert to Base64
+    name_hash_b64 = base64.b64encode(name_hash).decode('ascii')
     
+    print(f"Name: {name}, Name Hash (Base64): {name_hash_b64}")
+    
+    # Send name_hash as an array
+    fut = FutureJSON(lmq, beldexd, 'rpc.bns_names_to_owners', args={
+        "name_hash": [name_hash_b64]  # Send as an array
+    })
+    
+    # Wait for result
+    result = fut.get()
+    if result is None:
+        print("Error: No result returned from FutureJSON.")
+        return None
+    
+    # Print everything nicely
+    print(json.dumps(result, indent=2))
+    
+    return result
+
 @app.route('/bns/<string:name>')
 @app.route('/bns/<string:name>/<int:more_details>')
 def show_bns(name, more_details=False):
     name = name.lower()
     lmq, beldexd = lmq_connection()
     info = FutureJSON(lmq, beldexd, 'rpc.get_info', 1)
+
+    # Validation
     if len(name) > 64 or not all(c.isalnum() or c in '_-' for c in name):
-        return flask.render_template('not_found.html',
+        return flask.render_template(
+            'not_found.html',
             info=info.get(),
             type='bad_search',
             id=name,
-            )
+        )
+
     if name in ["localhost", "mnode", "beldex"]:
-        return flask.render_template('not_found.html',
+        return flask.render_template(
+            'not_found.html',
             info=info.get(),
             type='bns_reserved',
             id=name,
-            )
-    # bns_types = {'bchat':0,'wallet':1,'belnet':2, 'eth_addr':3}
-    bns_data = {'name':name}
-    name = name+'.bdx'
-    ENCRYPTED_BCHAT_LENGTH = 146  # If the encrypted value is not of expected character
-    ENCRYPTED_WALLET_LENGTH = 210   # length it is of HF15 and before.
-    ENCRYPTED_BELNET_LENGTH = 144  # The user must update their bchat mapping.
-    ENCRYPTED_ETH_LENGTH = 120 # Enable Eth address Display in HF-19
-    bnsinfo = bns_info(lmq, beldexd, name).get()
-    if 'entries' not in bnsinfo:
-     # If returned with no data from the RPC
-            bns_data['result'] = True
+        )
+
+    # Lookup
+    bns_data = {'name': name}
+    query_name = name + '.bdx'
+
+    bnsinfo = bns_info(lmq, beldexd, query_name)
+    if not bnsinfo or 'result' not in bnsinfo:
+        bns_data['result'] = True  # no result
     else:
-        bnsinfo = bnsinfo['entries'][0]
-        bns_data['result'] = bnsinfo
-        if (len(bnsinfo['encrypted_bchat_value']) != 0):
-            type = 'bchat'
-            encrypted_bchat_value = bnsinfo['encrypted_bchat_value']
-            bns_decrypt_bchat = bns_decrypt(lmq, beldexd, name, type, encrypted_bchat_value).get()
-            bns_data['result']['bchat_value'] = bns_decrypt_bchat['value']
-        if (len(bnsinfo['encrypted_belnet_value']) != 0):
-            type = 'belnet'
-            encrypted_belnet_value = bnsinfo['encrypted_belnet_value']
-            bns_decrypt_belnet = bns_decrypt(lmq, beldexd, name, type, encrypted_belnet_value).get()
-            bns_data['result']['belnet_value'] = bns_decrypt_belnet['value']
-        if (len(bnsinfo['encrypted_wallet_value']) != 0):
-            type = 'wallet'
-            encrypted_wallet_value = bnsinfo['encrypted_wallet_value']
-            bns_decrypt_wallet = bns_decrypt(lmq, beldexd, name, type, encrypted_wallet_value).get()
-            bns_data['result']['wallet_value'] = bns_decrypt_wallet['value']
-        if (len(bnsinfo['encrypted_eth_addr_value']) != 0):
-            type = 'eth_addr'
-            encrypted_eth_addr_value = bnsinfo['encrypted_eth_addr_value']
-            bns_decrypt_eth_addr = bns_decrypt(lmq, beldexd, name, type, encrypted_eth_addr_value).get()
-            bns_data['result']['eth_addr_value'] = bns_decrypt_eth_addr['value']
+        bns_entry = bnsinfo['result'][0]
+        bns_data['result'] = bns_entry
+
+        # Decrypt values if present
+        for bns_type, field in [
+            ('bchat', 'encrypted_bchat_value'),
+            ('belnet', 'encrypted_belnet_value'),
+            ('wallet', 'encrypted_wallet_value'),
+            ('eth_addr', 'encrypted_eth_addr_value'),
+        ]:
+            enc_val = bns_entry.get(field, "")
+            if enc_val:
+                dec = bns_decrypt(lmq, beldexd, query_name, bns_type, enc_val).get()
+                if 'value' in dec:
+                    bns_data['result'][f"{bns_type}_value"] = dec['value']
+
+    # More details (syntax highlighting)
     if more_details:
         formatter = HtmlFormatter(cssclass="syntax-highlight", style="paraiso-dark")
         more_details = {
-                'details_css': formatter.get_style_defs('.syntax-highlight'),
-                'details_html': highlight(json.dumps(bns_data, indent="\t"), JsonLexer(), formatter),
-                }
+            'details_css': formatter.get_style_defs('.syntax-highlight'),
+            'details_html': highlight(json.dumps(bns_data, indent=2), JsonLexer(), formatter),
+        }
     else:
         more_details = {}
-                
-    return flask.render_template('bns.html',
-            info=info.get(),
-            bns=bns_data,
-            **more_details,
-            )
+
+    return flask.render_template(
+        'bns.html',
+        info=info.get(),
+        bns=bns_data,
+        **more_details,
+    )
+
+
 
 @app.route('/master_node/<hex64:pubkey>')
 @app.route('/mn/<hex64:pubkey>')
@@ -851,13 +878,13 @@ def search():
     # BNS can be of length 64 however with txids, and sn pubkey's being of length 64 
     # I have removed it from the possible searches.
     if len(val) < 64 and all(c.isalnum() or c in '_-' for c in val):
-        return flask.redirect(flask.url_for('show_bns', name=val), code=301) 
-    elif not val or len(val) != 64 or any(c not in string.hexdigits for c in val):
-        return flask.render_template('not_found.html',
-                info=info.get(),
-                type='bad_search',
-                id=val,
-                )
+        return flask.redirect(flask.url_for('show_bns', name=val), code=301)    
+
+    return flask.render_template('not_found.html',
+            info=info.get(),
+            type='bad_search',
+            id=val,
+            )
 
     # Initiate all the lookups at once, then redirect to whichever one responds affirmatively
     mnreq = mn_req(lmq, beldexd, val)
@@ -900,8 +927,8 @@ def api_bnslookup():
     bnsinfo = bns_info(lmq, beldexd, name).get()
     bns_data = {'name': name, 'bchat': "", 'belnet': "", 'wallet': "", 'ethAddress': ""}
 
-    if 'entries' in bnsinfo:
-        bnsinfo = bnsinfo['entries'][0]
+    if 'result' in bnsinfo:
+        bnsinfo = bnsinfo['result'][0]
         types = {
         'bchat': 'encrypted_bchat_value',
         'belnet': 'encrypted_belnet_value',
